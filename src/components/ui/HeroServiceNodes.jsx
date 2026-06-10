@@ -158,10 +158,7 @@ function OrbitLines({ radius, center, orbitProgress, animated }) {
   );
 }
 
-function CenterLogo({ size }) {
-  const cardW = Math.round(size * 0.34);
-  const cardH = Math.round(size * 0.42);
-
+function CenterLogo() {
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.88 }}
@@ -169,18 +166,12 @@ function CenterLogo({ size }) {
       transition={{ duration: 0.7, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
       className="relative z-30"
     >
-      <div
-        className="absolute rounded-[1.25rem] bg-accent-purple/30 blur-3xl"
-        style={{ inset: -size * 0.06 }}
-      />
-      <div
-        className="relative flex items-center justify-center rounded-[1.25rem] border border-accent-purple/35 bg-gradient-to-b from-[#141832]/95 to-[#0a0d1f]/95 shadow-[0_0_72px_rgba(109,40,255,0.28)] backdrop-blur-sm"
-        style={{ width: cardW, height: cardH, padding: size * 0.04 }}
-      >
+      <div className="absolute -inset-4 rounded-[1.25rem] bg-accent-purple/30 blur-3xl" />
+      <div className="relative flex h-[200px] w-[200px] items-center justify-center rounded-[1.25rem] border border-accent-purple/35 bg-gradient-to-b from-[#141832]/95 to-[#0a0d1f]/95 p-4 shadow-[0_0_72px_rgba(109,40,255,0.28)] backdrop-blur-sm">
         <img
           src={anantaLogo}
           alt="Ananta One"
-          className="h-full w-full object-contain drop-shadow-[0_0_18px_rgba(6,214,246,0.25)]"
+          className="h-[200px] w-[200px] object-contain drop-shadow-[0_0_18px_rgba(6,214,246,0.25)]"
         />
       </div>
     </motion.div>
@@ -281,7 +272,7 @@ export function HeroServiceNodes() {
         />
 
         <div className="absolute left-1/2 top-1/2 z-20 -translate-x-1/2 -translate-y-1/2">
-          <CenterLogo size={size} />
+          <CenterLogo />
         </div>
 
         {heroNodes.map((node, index) => (

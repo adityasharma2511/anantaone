@@ -135,7 +135,7 @@ export function Hero() {
         </div>
       </Container>
 
-      <ScrollIndicator />
+      {/* <ScrollIndicator /> */}
 
       <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-dark to-transparent" />
     </section>

@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion';
 import { Container } from '@/components/ui/Container';
+import { AnimatedCounter } from '@/components/ui/AnimatedCounter';
 import { SECTION_IDS } from '@/constants/theme';
 import { stats } from '@/data/services';
 
@@ -26,7 +27,11 @@ export function Stats() {
                 </div>
                 <div>
                   <p className="font-heading text-lg font-bold text-white sm:text-xl">
-                    {stat.value}
+                    <AnimatedCounter
+                      countTo={stat.countTo}
+                      suffix={stat.suffix}
+                      duration={1.6 + index * 0.1}
+                    />
                   </p>
                   <p className="text-xs text-muted sm:text-sm">{stat.label}</p>
                 </div>

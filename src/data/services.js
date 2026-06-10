@@ -87,13 +87,15 @@ export const featuredServices = [
 ];
 
 export const stats = [
-  { id: 'projects', value: '50+', label: 'Projects Delivered', icon: Rocket },
-  { id: 'clients', value: '30+', label: 'Happy Clients', icon: Smile },
-  { id: 'apps', value: '2', label: 'Shopify Apps', icon: ShoppingBag },
-  { id: 'countries', value: '5+', label: 'Countries Served', icon: Globe },
+  { id: 'projects', value: '50+', countTo: 50, suffix: '+', label: 'Projects Delivered', icon: Rocket },
+  { id: 'clients', value: '30+', countTo: 30, suffix: '+', label: 'Happy Clients', icon: Smile },
+  { id: 'apps', value: '2', countTo: 2, suffix: '', label: 'Shopify Apps', icon: ShoppingBag },
+  { id: 'countries', value: '5+', countTo: 5, suffix: '+', label: 'Countries Served', icon: Globe },
   {
     id: 'focus',
     value: '100%',
+    countTo: 100,
+    suffix: '%',
     label: 'Client Satisfaction',
     icon: ShieldCheck,
   },

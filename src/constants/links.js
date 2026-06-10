@@ -3,7 +3,7 @@ export const EXTERNAL_LINKS = {
   expert: 'mailto:experts@anantaone.in',
   shopifyAppStore: {
     collectionTree: 'https://apps.shopify.com/collection-tree',
-    storeRadar: 'https://apps.shopify.com/store-radar',
+    storeRadar: 'https://apps.shopify.com/order-radar',
   },
   social: {
     linkedin: 'https://linkedin.com/company/anantaone',
