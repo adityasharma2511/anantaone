@@ -1,4 +1,3 @@
-/* eslint-env node */
 import { Resend } from 'resend';
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -29,6 +28,75 @@ function jsonResponse(statusCode, body) {
     statusCode,
     headers: corsHeaders,
     body: JSON.stringify(body),
+  };
+}
+
+function maskSecret(value) {
+  if (!value) return 'NOT SET';
+  if (value.length <= 8) return 'set (hidden)';
+  return `set (${value.slice(0, 7)}…, length ${value.length})`;
+}
+
+/**
+ * Reads Resend/email env vars from process.env.
+ *
+ * Expected location:
+ * - Production: Netlify → Site configuration → Environment variables
+ * - Local: project root `.env` when running `netlify dev`
+ *
+ * Required keys (exact names, no VITE_ prefix):
+ * - RESEND_API_KEY
+ * - ENQUIRY_FROM_EMAIL
+ * - ENQUIRY_TO_EMAIL
+ */
+function validateEnvironment() {
+  console.log('[send-enquiry] Validating environment variables…');
+
+  const RESEND_API_KEY = process.env.RESEND_API_KEY?.trim() || '';
+  const ENQUIRY_FROM_EMAIL = process.env.ENQUIRY_FROM_EMAIL?.trim() || '';
+  const ENQUIRY_TO_EMAIL = process.env.ENQUIRY_TO_EMAIL?.trim() || '';
+
+  const relatedEnvKeys = Object.keys(process.env).filter((key) =>
+    /RESEND|ENQUIRY|EMAIL/i.test(key),
+  );
+
+  console.log('[send-enquiry] process.env.RESEND_API_KEY:', maskSecret(RESEND_API_KEY));
+  console.log('[send-enquiry] process.env.ENQUIRY_FROM_EMAIL:', ENQUIRY_FROM_EMAIL || 'NOT SET');
+  console.log('[send-enquiry] process.env.ENQUIRY_TO_EMAIL:', ENQUIRY_TO_EMAIL || 'NOT SET');
+  console.log(
+    '[send-enquiry] Related env keys in runtime:',
+    relatedEnvKeys.length > 0 ? relatedEnvKeys.join(', ') : 'none',
+  );
+
+  const configErrors = [];
+
+  if (!RESEND_API_KEY) {
+    configErrors.push('RESEND_API_KEY environment variable is not configured.');
+  } else if (!RESEND_API_KEY.startsWith('re_')) {
+    configErrors.push(
+      'RESEND_API_KEY appears invalid. Resend API keys must start with "re_".',
+    );
+  }
+
+  if (!ENQUIRY_FROM_EMAIL) {
+    configErrors.push('ENQUIRY_FROM_EMAIL environment variable is not configured.');
+  }
+
+  if (!ENQUIRY_TO_EMAIL) {
+    configErrors.push('ENQUIRY_TO_EMAIL environment variable is not configured.');
+  }
+
+  if (configErrors.length > 0) {
+    console.error('[send-enquiry] Configuration errors:', configErrors);
+  } else {
+    console.log('[send-enquiry] Environment validation passed.');
+  }
+
+  return {
+    configErrors,
+    RESEND_API_KEY,
+    ENQUIRY_FROM_EMAIL,
+    ENQUIRY_TO_EMAIL,
   };
 }
 
@@ -98,11 +166,13 @@ export async function handler(event) {
     return jsonResponse(405, { error: 'Method not allowed' });
   }
 
-  const { RESEND_API_KEY, ENQUIRY_FROM_EMAIL, ENQUIRY_TO_EMAIL } = process.env;
+  const env = validateEnvironment();
 
-  if (!RESEND_API_KEY || !ENQUIRY_FROM_EMAIL || !ENQUIRY_TO_EMAIL) {
+  if (env.configErrors.length > 0) {
     return jsonResponse(500, {
-      error: 'Email service is not configured. Contact the site administrator.',
+      error: env.configErrors[0],
+      configErrors: env.configErrors,
+      hint: 'Set variables in Netlify → Site configuration → Environment variables, then redeploy.',
     });
   }
 
@@ -130,11 +200,19 @@ export async function handler(event) {
   });
 
   try {
-    const resend = new Resend(RESEND_API_KEY);
+    // Resend reads the API key from process.env.RESEND_API_KEY (passed explicitly here).
+    console.log('[send-enquiry] Initializing Resend client with process.env.RESEND_API_KEY');
+    const resend = new Resend(env.RESEND_API_KEY);
 
-    await resend.emails.send({
-      from: ENQUIRY_FROM_EMAIL,
-      to: ENQUIRY_TO_EMAIL,
+    console.log('[send-enquiry] Sending email via Resend…', {
+      from: env.ENQUIRY_FROM_EMAIL,
+      to: env.ENQUIRY_TO_EMAIL,
+      replyTo: email,
+    });
+
+    const { data, error } = await resend.emails.send({
+      from: env.ENQUIRY_FROM_EMAIL,
+      to: env.ENQUIRY_TO_EMAIL,
       replyTo: email,
       subject: 'New Website Enquiry - Ananta One',
       html: buildEmailHtml({
@@ -147,11 +225,21 @@ export async function handler(event) {
       }),
     });
 
-    return jsonResponse(200, { success: true });
+    if (error) {
+      console.error('[send-enquiry] Resend API error:', error);
+      return jsonResponse(500, {
+        error: error.message || 'Failed to send enquiry. Please try again.',
+        provider: 'resend',
+      });
+    }
+
+    console.log('[send-enquiry] Email sent successfully. Resend id:', data?.id || 'unknown');
+    return jsonResponse(200, { success: true, id: data?.id });
   } catch (error) {
-    console.error('Resend enquiry error:', error);
+    console.error('[send-enquiry] Unexpected Resend error:', error);
     return jsonResponse(500, {
-      error: 'Failed to send enquiry. Please try again.',
+      error: error instanceof Error ? error.message : 'Failed to send enquiry. Please try again.',
+      provider: 'resend',
     });
   }
 }

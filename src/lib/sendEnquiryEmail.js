@@ -24,7 +24,11 @@ export async function sendEnquiryEmail(formData) {
   }
 
   if (!response.ok) {
-    throw new Error(data.error || 'Something went wrong. Please try again.');
+    const message =
+      data.error ||
+      (Array.isArray(data.configErrors) ? data.configErrors.join(' ') : null) ||
+      'Something went wrong. Please try again.';
+    throw new Error(message);
   }
 
   return data;
