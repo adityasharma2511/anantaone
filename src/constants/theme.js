@@ -2,7 +2,7 @@ export const BRAND = {
   name: 'Ananta One',
   tagline: 'One Problem. Infinite Solutions.',
   email: 'experts@anantaone.in',
-   phone: '+91 ',
+   phone: '+91 1234567890',
    location: 'Worldwide Support',
 };
 
